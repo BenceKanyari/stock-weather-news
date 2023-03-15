@@ -40,5 +40,3 @@ ppt_stack <- prism_stack(prism_archive_subset(
 
 save(ppt_stack, file = "ppt_stack.RData")
 
-
-

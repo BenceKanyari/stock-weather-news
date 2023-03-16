@@ -1,5 +1,8 @@
 library(rvest)
 
+no_news_days <- read_lines("no_news_days") |>
+  as.Date() # in some rare cases the day is missing in the archive
+
 get_meta <- function(p) {
 
   n_times_try({
@@ -62,13 +65,13 @@ get_text <- function(x) {
     closeAllConnections()
     Sys.sleep(.2)
     read_html(x) %>%
-      html_nodes("p") %>%
+      html_nodes(".article-content p") %>%
       html_text() %>%
       str_flatten(" ")
   },
   sleep_times = c(rep(c(3, 3, 15), 5), rep(180, 3), rep(15, 4)),
   otherwise = {
-    info("Failed to download {x}")
+    info("Failed to download.")
     as.character(NA)
   }
   )
@@ -90,7 +93,8 @@ month_to_download <- seq.Date(from = as.Date("1998-08-01"), to = as.Date("2023-0
 walk(month_to_download, \(m) {
   m <<- m # for the info printing
 
-  days_to_download <- seq.Date(from = m, to = m + months(1) - 1, by = "1 day")
+  days_to_download <- seq.Date(from = m, to = m + months(1) - 1, by = "1 day") |>
+    discard(~ . %in% no_news_days)
 
   info("Collecting links for {format(m, '%Y-%m')}")
 
@@ -122,4 +126,3 @@ walk(month_to_download, \(m) {
   info("Data saved for {format(m, '%Y-%m')}", "ok")
 
 })
-
